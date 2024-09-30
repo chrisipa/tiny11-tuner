@@ -110,7 +110,7 @@ function Disable-Windows-Updates {
         [bool]$doPause
     )
 
-    Log-Action-Text "Disabe Windows updates" "Yellow"
+    Log-Action-Text "Disable Windows updates" "Yellow"
 
     # Stop the Windows Update service
     Stop-Service -Name wuauserv -Force
@@ -168,6 +168,34 @@ function Disable-System-Sounds {
     }
 }
 
+function Fix-Taskbar-Settings {
+
+    param (
+        [bool]$doPause
+    )
+
+    Log-Action-Text "Fix taskbar settings" "Yellow"
+
+    # Remove task view from taskbar
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value 0 -Type DWord -Force
+    
+    # Remove widgets from taskbar
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force
+    
+    # Remove chat from taskbar
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Value 0 -Type DWord -Force
+    
+    # Set default start menu alignment to left
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 0 -Type DWord -Force
+    
+    # Remove search from taskbar
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name "SearchboxTaskbarMode" -Value 0 -Type DWord -Force
+
+    if ($doPause) {
+        Pause
+    }
+}
+
 function Execute-All {
 
     param (
@@ -181,8 +209,27 @@ function Execute-All {
     Restore-Classical-Start-Menu $doPause
     Disable-Windows-Updates $doPause
     Disable-System-Sounds $doPause
+    Fix-Taskbar-Settings $doPause
 
     Pause
+}
+
+function Restart-Machine {
+
+    $choice = Read-Host "Your computer needs to be restarted to apply all settings correctly. Do you want to continue? (Y/N)"
+
+    switch ($choice) {
+        y { 
+            Write-Host "Restarting computer now ..."
+            Restart-Computer -Force
+        }
+        n { 
+            Write-Host "Restart of computer was skipped." 
+        }
+        default { 
+            Write-Host "Invalid choice, please try again." -ForegroundColor Red 
+        }
+    }
 }
 
 # Define the menu function
@@ -201,7 +248,8 @@ function Show-Menu {
     Write-Host "5. Restore classical start menu"
     Write-Host "6. Disable Windows updates"
     Write-Host "7. Disable system sounds"
-    Write-Host "8. Exit"
+    Write-Host "8. Fix taskbar settings"
+    Write-Host "9. Exit"
     Write-Host "======================================"
 }
 
@@ -210,7 +258,7 @@ do {
     
     Show-Menu
 
-    $choice = Read-Host "Enter your choice (0-8)"
+    $choice = Read-Host "Enter your choice (0-9)"
 
     switch ($choice) {
 
@@ -222,14 +270,11 @@ do {
         5 { Restore-Classical-Start-Menu $true }
         6 { Disable-Windows-Updates $true }
         7 { Disable-System-Sounds $true }
-        8 { 
-            Write-Host ""
-            Write-Host "Please restart your computer now to ensure that all settings are applied correctly!" -ForegroundColor Red 
-            Write-Host ""
-        }
+        8 { Fix-Taskbar-Settings $true }
+        9 { Restart-Machine }
         default {
             Write-Host "Invalid choice, please try again." -ForegroundColor Red
             Pause
         }
     }
-} while ($choice -ne 8)
+} while ($choice -ne 9)
