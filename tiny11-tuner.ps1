@@ -16,6 +16,21 @@ function Log-Action-Text {
     Write-Host ""
 }
 
+function Create-Registry-Path-If-Not-Exists {
+
+    param (
+        [string]$registryPath
+    )
+
+    if (-not (Test-Path $registryPath)) {
+        New-Item -Path $registryPath -Force | Out-Null
+        Write-Host "Registry path created: $registryPath"
+    } 
+    else {
+        Write-Host "Registry path already exists: $registryPath"
+    }
+}
+
 function Install-Chocolatey {
 
     param (
@@ -39,7 +54,14 @@ function Show-All-File-Extensions {
 
     Log-Action-Text "Set registry key to show all file extensions" "Yellow"
 
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Value 0 -Type DWord -Force
+    # Define the registry path
+    $registryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
+    
+    # Set registry value
+    Set-ItemProperty -Path $registryPath -Name "HideFileExt" -Value 0 -Type DWord -Force
 
     if ($doPause) {
         Pause
@@ -55,18 +77,16 @@ function Disable-Gaming-Overlay-Links-Popup {
     Log-Action-Text "Disable gaming overlay links popup" "Yellow"
     
     # Define the registry path
-    $regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR"
+    $registryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR"
 
-    # Create the registry key if it doesn't exist
-    if (-not (Test-Path $regPath)) {
-        New-Item -Path $regPath -Force
-    }
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
 
     # Set registry values
-    Set-ItemProperty -Path $regPath -Name "AppCaptureEnabled" -Value 0 -Type DWord
-    Set-ItemProperty -Path $regPath -Name "AudioCaptureEnabled" -Value 0 -Type DWord
-    Set-ItemProperty -Path $regPath -Name "CursorCaptureEnabled" -Value 0 -Type DWord
-    Set-ItemProperty -Path $regPath -Name "HistoricalCaptureEnabled" -Value 0 -Type DWord
+    Set-ItemProperty -Path $registryPath -Name "AppCaptureEnabled" -Value 0 -Type DWord -Force
+    Set-ItemProperty -Path $registryPath -Name "AudioCaptureEnabled" -Value 0 -Type DWord -Force
+    Set-ItemProperty -Path $registryPath -Name "CursorCaptureEnabled" -Value 0 -Type DWord -Force
+    Set-ItemProperty -Path $registryPath -Name "HistoricalCaptureEnabled" -Value 0 -Type DWord -Force
 
     if ($doPause) {
         Pause
@@ -81,8 +101,14 @@ function Restore-Classical-Context-Menu {
 
     Log-Action-Text "Restore classical context menu" "Yellow"
 
-    New-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}" -Name "InprocServer32" -Force
-    Set-ItemProperty -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" -Name "(default)" -Value "" -Force
+    # Define the registry path
+    $registryPath = "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
+
+    # Set registry value
+    Set-ItemProperty -Path $registryPath -Name "(default)" -Value "" -Force
 
     if ($doPause) {
         Pause
@@ -176,20 +202,65 @@ function Fix-Taskbar-Settings {
 
     Log-Action-Text "Fix taskbar settings" "Yellow"
 
+    # Define the registry path
+    $taskbarRegistryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+    $searchRegistryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search"
+
+    # Create the registry paths if they do not exist
+    Create-Registry-Path-If-Not-Exists $taskbarRegistryPath
+    Create-Registry-Path-If-Not-Exists $searchRegistryPath
+
     # Remove task view from taskbar
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value 0 -Type DWord -Force
+    Set-ItemProperty -Path $taskbarRegistryPath -Name "ShowTaskViewButton" -Value 0 -Type DWord -Force
     
     # Remove widgets from taskbar
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force
+    Set-ItemProperty -Path $taskbarRegistryPath -Name "TaskbarDa" -Value 0 -Type DWord -Force
     
     # Remove chat from taskbar
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Value 0 -Type DWord -Force
+    Set-ItemProperty -Path $taskbarRegistryPath -Name "TaskbarMn" -Value 0 -Type DWord -Force
     
     # Set default start menu alignment to left
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 0 -Type DWord -Force
+    Set-ItemProperty -Path $taskbarRegistryPath -Name "TaskbarAl" -Value 0 -Type DWord -Force
     
     # Remove search from taskbar
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" -Name "SearchboxTaskbarMode" -Value 0 -Type DWord -Force
+    Set-ItemProperty -Path $searchRegistryPath -Name "SearchboxTaskbarMode" -Value 0 -Type DWord -Force
+
+    if ($doPause) {
+        Pause
+    }
+}
+
+function Disable-Startup-Ads-For-M365 {
+
+    param (
+        [bool]$doPause
+    )
+
+    Log-Action-Text "Disable startup ads for M365" "Yellow"
+
+    Write-Host "Disable startup ad: Show me the Windows welcome experience after updates and occasionally when I sign in to highlight what's new and suggested"
+    Create-Registry-Path-If-Not-Exists "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+                 -Name "SubscribedContent-310093Enabled" `
+                 -Value 0 `
+                 -Type DWord `
+                 -Force
+
+    Write-Host "Disable startup ad: Suggest ways to get the most out of Windows and finish setting up this device"
+    Create-Registry-Path-If-Not-Exists "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+                 -Name "SubscribedContent-338389Enabled" `
+                 -Value 0 `
+                 -Type DWord `
+                 -Force
+
+    Write-Host "Disable startup ad: Get tips and suggestions when using Windows"
+    Create-Registry-Path-If-Not-Exists "HKCU:\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement"
+    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement" `
+                 -Name "ScoobeSystemSettingEnabled" `
+                 -Value 0 `
+                 -Type DWord `
+                 -Force
 
     if ($doPause) {
         Pause
@@ -210,6 +281,7 @@ function Execute-All {
     Disable-Windows-Updates $doPause
     Disable-System-Sounds $doPause
     Fix-Taskbar-Settings $doPause
+    Disable-Startup-Ads-For-M365 $doPause
 
     Pause
 }
@@ -240,16 +312,17 @@ function Show-Menu {
     Write-Host "======================================"
     Write-Host "             Tiny 11 Tuner            "
     Write-Host "======================================"
-    Write-Host "0. Execute all actions"
-    Write-Host "1. Install Chocolatey package manager"
-    Write-Host "2. Show all file extensions"
-    Write-Host "3. Disable gaming overlay links popup"
-    Write-Host "4. Restore classical context menu"
-    Write-Host "5. Restore classical start menu"
-    Write-Host "6. Disable Windows updates"
-    Write-Host "7. Disable system sounds"
-    Write-Host "8. Fix taskbar settings"
-    Write-Host "9. Exit"
+    Write-Host " 0. Execute all actions"
+    Write-Host " 1. Install Chocolatey package manager"
+    Write-Host " 2. Show all file extensions"
+    Write-Host " 3. Disable gaming overlay links popup"
+    Write-Host " 4. Restore classical context menu"
+    Write-Host " 5. Restore classical start menu"
+    Write-Host " 6. Disable Windows updates"
+    Write-Host " 7. Disable system sounds"
+    Write-Host " 8. Fix taskbar settings"
+    Write-Host " 9. Disable startup ads for M365"
+    Write-Host "10. Exit"
     Write-Host "======================================"
 }
 
@@ -258,23 +331,24 @@ do {
     
     Show-Menu
 
-    $choice = Read-Host "Enter your choice (0-9)"
+    $choice = Read-Host "Enter your choice (0-10)"
 
     switch ($choice) {
 
-        0 { Execute-All $false }
-        1 { Install-Chocolatey $true }
-        2 { Show-All-File-Extensions $true }
-        3 { Disable-Gaming-Overlay-Links-Popup $true }
-        4 { Restore-Classical-Context-Menu $true }
-        5 { Restore-Classical-Start-Menu $true }
-        6 { Disable-Windows-Updates $true }
-        7 { Disable-System-Sounds $true }
-        8 { Fix-Taskbar-Settings $true }
-        9 { Restart-Machine }
+         0 { Execute-All $false }
+         1 { Install-Chocolatey $true }
+         2 { Show-All-File-Extensions $true }
+         3 { Disable-Gaming-Overlay-Links-Popup $true }
+         4 { Restore-Classical-Context-Menu $true }
+         5 { Restore-Classical-Start-Menu $true }
+         6 { Disable-Windows-Updates $true }
+         7 { Disable-System-Sounds $true }
+         8 { Fix-Taskbar-Settings $true }
+         9 { Disable-Startup-Ads-For-M365 $true }
+        10 { Restart-Machine }
         default {
             Write-Host "Invalid choice, please try again." -ForegroundColor Red
             Pause
         }
     }
-} while ($choice -ne 9)
+} while ($choice -ne 10)
