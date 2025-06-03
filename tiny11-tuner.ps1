@@ -68,13 +68,13 @@ function Show-All-File-Extensions {
     }
 }
 
-function Disable-Gaming-Overlay-Links-Popup {
+function Disable-Gamebar-Popups {
 
     param (
         [bool]$doPause
     )
 
-    Log-Action-Text "Disable gaming overlay links popup" "Yellow"
+    Log-Action-Text "Disable gamebar popups" "Yellow"
     
     # Define the registry path
     $registryPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR"
@@ -87,6 +87,15 @@ function Disable-Gaming-Overlay-Links-Popup {
     Set-ItemProperty -Path $registryPath -Name "AudioCaptureEnabled" -Value 0 -Type DWord -Force
     Set-ItemProperty -Path $registryPath -Name "CursorCaptureEnabled" -Value 0 -Type DWord -Force
     Set-ItemProperty -Path $registryPath -Name "HistoricalCaptureEnabled" -Value 0 -Type DWord -Force
+
+    # Define the registry path    
+    $registryPath = "HKCU:\System\GameConfigStore"
+    
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
+    
+    # Set registry values
+    Set-ItemProperty -Path $registryPath -Name "GameDVR_Enabled" -Value 0 -Type DWord -Force
 
     if ($doPause) {
         Pause
@@ -275,7 +284,7 @@ function Execute-All {
 
     Install-Chocolatey $doPause
     Show-All-File-Extensions $doPause
-    Disable-Gaming-Overlay-Links-Popup $doPause
+    Disable-Gamebar-Popups $doPause
     Restore-Classical-Context-Menu $doPause
     Restore-Classical-Start-Menu $doPause
     Disable-Windows-Updates $doPause
@@ -315,7 +324,7 @@ function Show-Menu {
     Write-Host " 0. Execute all actions"
     Write-Host " 1. Install Chocolatey package manager"
     Write-Host " 2. Show all file extensions"
-    Write-Host " 3. Disable gaming overlay links popup"
+    Write-Host " 3. Disable gamebar popups"
     Write-Host " 4. Restore classical context menu"
     Write-Host " 5. Restore classical start menu"
     Write-Host " 6. Disable Windows updates"
@@ -338,7 +347,7 @@ do {
          0 { Execute-All $false }
          1 { Install-Chocolatey $true }
          2 { Show-All-File-Extensions $true }
-         3 { Disable-Gaming-Overlay-Links-Popup $true }
+         3 { Disable-Gamebar-Popups $true }
          4 { Restore-Classical-Context-Menu $true }
          5 { Restore-Classical-Start-Menu $true }
          6 { Disable-Windows-Updates $true }
