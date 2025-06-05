@@ -97,6 +97,25 @@ function Disable-Gamebar-Popups {
     # Set registry values
     Set-ItemProperty -Path $registryPath -Name "GameDVR_Enabled" -Value 0 -Type DWord -Force
 
+    # Define the registry path
+    $registryPath = "HKCU:\SOFTWARE\Classes\ms-gamebar"
+
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
+
+    # Set registry values
+    Set-ItemProperty -Path $registryPath -Name "(Default)" -Value "URL:ms-gamebar" -Type String -Force
+    Set-ItemProperty -Path $registryPath -Name "URL Protocol" -Value "" -Type String -Force
+
+    # Define the registry path    
+    $registryPath = "HKCU:\SOFTWARE\Classes\ms-gamebar\shell\open\command"
+    
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
+
+    # Set registry values
+    Set-ItemProperty -Path "HKCU:\SOFTWARE\Classes\ms-gamebar\shell\open\command" -Name "(Default)" -Value "C:\Windows\System32\cmd.exe /c exit" -Type String -Force
+
     if ($doPause) {
         Pause
     }
