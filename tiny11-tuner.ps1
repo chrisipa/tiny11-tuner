@@ -192,17 +192,17 @@ function Disable-System-Sounds {
     $keyName = "(Default)" 
     $setValue = ".None" 
 
-    $TestPath = Test-Path $path
-    if (-Not($TestPath -eq $True)) {
+    $testPath = Test-Path $path
+    if (-Not($testPath -eq $True)) {
         Write-Host "Creating folder ..." 
         New-item $path -force
     } 
 
     if (Get-ItemProperty -path $path -name $keyName -EA SilentlyContinue) {
 
-        $Keyvalue = (Get-ItemProperty -path $path).$keyName  
+        $keyValue = (Get-ItemProperty -path $path).$keyName  
 
-        if ($KeyValue -eq $setValue) {
+        if ($keyValue -eq $setValue) {
             Write-Host "The registry key already exists." 
         }
         else {
