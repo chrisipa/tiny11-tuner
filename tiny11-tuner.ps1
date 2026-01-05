@@ -166,11 +166,14 @@ function Disable-Windows-Updates {
 
     Log-Action-Text "Disable Windows updates" "Yellow"
 
-    # Stop the Windows Update service
-    Stop-Service -Name wuauserv -Force
+    # Define the registry path
+    $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
 
-    # Disable the Windows Update service startup
-    Set-Service -Name wuauserv -StartupType Disabled
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
+
+    # Set registry value
+    Set-ItemProperty -Path $registryPath -Name "NoAutoUpdate" -Value 1 -Force
 
     if ($doPause) {
         Pause
