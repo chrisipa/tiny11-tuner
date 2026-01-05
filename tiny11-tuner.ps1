@@ -295,6 +295,34 @@ function Disable-Startup-Ads-For-M365 {
     }
 }
 
+function Disable-Power-Saving-Features {
+
+    param (
+        [bool]$doPause
+    )
+
+    Log-Action-Text "Disable power saving features" "Yellow"
+
+    Write-Host "Disable turning off display"
+    powercfg /change monitor-timeout-ac 0
+    powercfg /change monitor-timeout-dc 0
+
+    Write-Host "Disable sleep"
+    powercfg /change standby-timeout-ac 0
+    powercfg /change standby-timeout-dc 0
+
+    Write-Host "Disable hard disk timeout"
+    powercfg /change disk-timeout-ac 0
+    powercfg /change disk-timeout-dc 0
+
+    Write-Host "Disable hibernation"
+    powercfg /hibernate off
+
+    if ($doPause) {
+        Pause
+    }
+}
+
 function Execute-All {
 
     param (
@@ -310,6 +338,7 @@ function Execute-All {
     Disable-System-Sounds $doPause
     Fix-Taskbar-Settings $doPause
     Disable-Startup-Ads-For-M365 $doPause
+    Disable-Power-Saving-Features $doPause
 
     Pause
 }
@@ -350,7 +379,8 @@ function Show-Menu {
     Write-Host " 7. Disable system sounds"
     Write-Host " 8. Fix taskbar settings"
     Write-Host " 9. Disable startup ads for M365"
-    Write-Host "10. Exit"
+    Write-Host "10. Disable power saving features"
+    Write-Host "11. Exit"
     Write-Host "======================================"
 }
 
@@ -359,7 +389,7 @@ do {
     
     Show-Menu
 
-    $choice = Read-Host "Enter your choice (0-10)"
+    $choice = Read-Host "Enter your choice (0-11)"
 
     switch ($choice) {
 
@@ -373,10 +403,11 @@ do {
          7 { Disable-System-Sounds $true }
          8 { Fix-Taskbar-Settings $true }
          9 { Disable-Startup-Ads-For-M365 $true }
-        10 { Restart-Machine }
+        10 { Disable-Power-Saving-Features $true }
+        11 { Restart-Machine }
         default {
             Write-Host "Invalid choice, please try again." -ForegroundColor Red
             Pause
         }
     }
-} while ($choice -ne 10)
+} while ($choice -ne 11)
