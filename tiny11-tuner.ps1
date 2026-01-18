@@ -43,59 +43,6 @@ function Test-Admin {
     }
 }
 
-
-function Install-Chocolatey {
-
-    param (
-        [bool]$doPause
-    )
-
-    Log-Action-Text "Install Chocolatey package manager" "Yellow"
-
-    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-    
-    if ($doPause) {
-        Pause
-    }
-}
-
-function Restore-Classical-Start-Menu {
-
-    param (
-        [bool]$doPause
-    )
-
-    Log-Action-Text "Restore classical start menu" "Yellow"
-
-    C:\ProgramData\chocolatey\bin\choco.exe install --force -y open-shell --params="'/StartMenu'"
-
-    if ($doPause) {
-        Pause
-    }
-}
-
-function Disable-Windows-Updates { 
-
-    param (
-        [bool]$doPause
-    )
-
-    Log-Action-Text "Disable Windows updates" "Yellow"
-
-    # Define the registry path
-    $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
-
-    # Create the registry path if it doesn't exist
-    Create-Registry-Path-If-Not-Exists $registryPath
-
-    # Set registry value
-    Set-ItemProperty -Path $registryPath -Name "NoAutoUpdate" -Value 1 -Force
-
-    if ($doPause) {
-        Pause
-    }
-}
-
 function Show-All-File-Extensions {
 
     param (
@@ -341,18 +288,64 @@ function Disable-Power-Saving-Features {
     }
 }
 
-function Execute-All {
+function Install-Chocolatey {
 
     param (
         [bool]$doPause
     )
 
-    if (Test-Admin) {
-        Install-Chocolatey $doPause
-        Restore-Classical-Start-Menu $doPause
-        Disable-Windows-Updates $doPause
-    }
+    Log-Action-Text "Install Chocolatey package manager" "Yellow"
 
+    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    
+    if ($doPause) {
+        Pause
+    }
+}
+
+function Restore-Classical-Start-Menu {
+
+    param (
+        [bool]$doPause
+    )
+
+    Log-Action-Text "Restore classical start menu" "Yellow"
+
+    C:\ProgramData\chocolatey\bin\choco.exe install --force -y open-shell --params="'/StartMenu'"
+
+    if ($doPause) {
+        Pause
+    }
+}
+
+function Disable-Windows-Updates { 
+
+    param (
+        [bool]$doPause
+    )
+
+    Log-Action-Text "Disable Windows updates" "Yellow"
+
+    # Define the registry path
+    $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
+
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
+
+    # Set registry value
+    Set-ItemProperty -Path $registryPath -Name "NoAutoUpdate" -Value 1 -Force
+
+    if ($doPause) {
+        Pause
+    }
+}
+
+function Execute-All {
+
+    param (
+        [bool]$doPause
+    )
+    
     Show-All-File-Extensions $doPause
     Disable-Gamebar-Popups $doPause
     Restore-Classical-Context-Menu $doPause
@@ -360,6 +353,12 @@ function Execute-All {
     Fix-Taskbar-Settings $doPause
     Disable-Startup-Ads-For-M365 $doPause
     Disable-Power-Saving-Features $doPause
+    
+    if (Test-Admin) {
+        Install-Chocolatey $doPause
+        Restore-Classical-Start-Menu $doPause
+        Disable-Windows-Updates $doPause
+    }
 
     Pause
 }
@@ -398,20 +397,20 @@ function Show-Menu {
 
     Write-Host "======================================"
     Write-Host " 0. Execute all actions"
+    Write-Host " 1. Show all file extensions"
+    Write-Host " 2. Disable gamebar popups"
+    Write-Host " 3. Restore classical context menu"
+    Write-Host " 4. Disable system sounds"
+    Write-Host " 5. Fix taskbar settings"
+    Write-Host " 6. Disable startup ads for M365"
+    Write-Host " 7. Disable power saving features"
 
     if (Test-Admin) {
-        Write-Host " 1. Install Chocolatey package manager"
-        Write-Host " 2. Restore classical start menu"
-        Write-Host " 3. Disable Windows updates"
+        Write-Host " 8. Install Chocolatey package manager"
+        Write-Host " 9. Restore classical start menu"
+        Write-Host "10. Disable Windows updates"
     }
 
-    Write-Host " 4. Show all file extensions"
-    Write-Host " 5. Disable gamebar popups"
-    Write-Host " 6. Restore classical context menu"
-    Write-Host " 7. Disable system sounds"
-    Write-Host " 8. Fix taskbar settings"
-    Write-Host " 9. Disable startup ads for M365"
-    Write-Host "10. Disable power saving features"
     Write-Host "11. Exit"
     Write-Host "======================================"
 }
@@ -426,16 +425,16 @@ do {
     switch ($choice) {
 
          0 { Execute-All $false }
-         1 { Install-Chocolatey $true }
-         2 { Restore-Classical-Start-Menu $true }
-         3 { Disable-Windows-Updates $true }
-         4 { Show-All-File-Extensions $true }
-         5 { Disable-Gamebar-Popups $true }
-         6 { Restore-Classical-Context-Menu $true }
-         7 { Disable-System-Sounds $true }
-         8 { Fix-Taskbar-Settings $true }
-         9 { Disable-Startup-Ads-For-M365 $true }
-        10 { Disable-Power-Saving-Features $true }
+         1 { Show-All-File-Extensions $true }
+         2 { Disable-Gamebar-Popups $true }
+         3 { Restore-Classical-Context-Menu $true }
+         4 { Disable-System-Sounds $true }
+         5 { Fix-Taskbar-Settings $true }
+         6 { Disable-Startup-Ads-For-M365 $true }
+         7 { Disable-Power-Saving-Features $true }
+         8 { Install-Chocolatey $true }
+         9 { Restore-Classical-Start-Menu $true }
+        10 { Disable-Windows-Updates $true }
         11 { Restart-Machine }
 
         default {
