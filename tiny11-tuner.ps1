@@ -31,6 +31,19 @@ function Create-Registry-Path-If-Not-Exists {
     }
 }
 
+function Test-Admin {
+
+    $identity = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+    
+    if (-not $identity.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        return $false
+    } 
+    else {
+        return $true
+    }
+}
+
+
 function Install-Chocolatey {
 
     param (
@@ -41,6 +54,43 @@ function Install-Chocolatey {
 
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
     
+    if ($doPause) {
+        Pause
+    }
+}
+
+function Restore-Classical-Start-Menu {
+
+    param (
+        [bool]$doPause
+    )
+
+    Log-Action-Text "Restore classical start menu" "Yellow"
+
+    C:\ProgramData\chocolatey\bin\choco.exe install --force -y open-shell --params="'/StartMenu:true /ClassicExplorer:false /ClassicIE:false'"
+
+    if ($doPause) {
+        Pause
+    }
+}
+
+function Disable-Windows-Updates {
+
+    param (
+        [bool]$doPause
+    )
+
+    Log-Action-Text "Disable Windows updates" "Yellow"
+
+    # Define the registry path
+    $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
+
+    # Create the registry path if it doesn't exist
+    Create-Registry-Path-If-Not-Exists $registryPath
+
+    # Set registry value
+    Set-ItemProperty -Path $registryPath -Name "NoAutoUpdate" -Value 1 -Force
+
     if ($doPause) {
         Pause
     }
@@ -137,43 +187,6 @@ function Restore-Classical-Context-Menu {
 
     # Set registry value
     Set-ItemProperty -Path $registryPath -Name "(default)" -Value "" -Force
-
-    if ($doPause) {
-        Pause
-    }
-}
-
-function Restore-Classical-Start-Menu {
-
-    param (
-        [bool]$doPause
-    )
-
-    Log-Action-Text "Restore classical start menu" "Yellow"
-
-    C:\ProgramData\chocolatey\bin\choco.exe install --force -y open-shell --params="'/StartMenu:true /ClassicExplorer:false /ClassicIE:false'"
-
-    if ($doPause) {
-        Pause
-    }
-}
-
-function Disable-Windows-Updates {
-
-    param (
-        [bool]$doPause
-    )
-
-    Log-Action-Text "Disable Windows updates" "Yellow"
-
-    # Define the registry path
-    $registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU"
-
-    # Create the registry path if it doesn't exist
-    Create-Registry-Path-If-Not-Exists $registryPath
-
-    # Set registry value
-    Set-ItemProperty -Path $registryPath -Name "NoAutoUpdate" -Value 1 -Force
 
     if ($doPause) {
         Pause
@@ -318,8 +331,10 @@ function Disable-Power-Saving-Features {
     powercfg /change disk-timeout-ac 0
     powercfg /change disk-timeout-dc 0
 
-    Write-Host "Disable hibernation"
-    powercfg /hibernate off
+    if (Test-Admin) {
+        Write-Host "Disable hibernation"
+        powercfg /hibernate off
+    }
 
     if ($doPause) {
         Pause
@@ -332,12 +347,15 @@ function Execute-All {
         [bool]$doPause
     )
 
-    Install-Chocolatey $doPause
+    if (Test-Admin) {
+        Install-Chocolatey $doPause
+        Restore-Classical-Start-Menu $doPause
+        Disable-Windows-Updates $doPause
+    }
+
     Show-All-File-Extensions $doPause
     Disable-Gamebar-Popups $doPause
     Restore-Classical-Context-Menu $doPause
-    Restore-Classical-Start-Menu $doPause
-    Disable-Windows-Updates $doPause
     Disable-System-Sounds $doPause
     Fix-Taskbar-Settings $doPause
     Disable-Startup-Ads-For-M365 $doPause
@@ -370,15 +388,26 @@ function Show-Menu {
     Clear-Host
 
     Write-Host "======================================"
-    Write-Host "             Tiny 11 Tuner            "
+
+    if (Test-Admin) {
+        Write-Host "      Tiny 11 Tuner [ADMIN MODE]      "
+    }
+    else {
+        Write-Host "       Tiny 11 Tuner [USER MODE]      "
+    }
+    
     Write-Host "======================================"
     Write-Host " 0. Execute all actions"
-    Write-Host " 1. Install Chocolatey package manager"
-    Write-Host " 2. Show all file extensions"
-    Write-Host " 3. Disable gamebar popups"
-    Write-Host " 4. Restore classical context menu"
-    Write-Host " 5. Restore classical start menu"
-    Write-Host " 6. Disable Windows updates"
+
+    if (Test-Admin) {
+        Write-Host " 1. Install Chocolatey package manager"
+        Write-Host " 2. Restore classical start menu"
+        Write-Host " 3. Disable Windows updates"
+    }
+
+    Write-Host " 4. Show all file extensions"
+    Write-Host " 5. Disable gamebar popups"
+    Write-Host " 6. Restore classical context menu"
     Write-Host " 7. Disable system sounds"
     Write-Host " 8. Fix taskbar settings"
     Write-Host " 9. Disable startup ads for M365"
@@ -398,16 +427,17 @@ do {
 
          0 { Execute-All $false }
          1 { Install-Chocolatey $true }
-         2 { Show-All-File-Extensions $true }
-         3 { Disable-Gamebar-Popups $true }
-         4 { Restore-Classical-Context-Menu $true }
-         5 { Restore-Classical-Start-Menu $true }
-         6 { Disable-Windows-Updates $true }
+         2 { Restore-Classical-Start-Menu $true }
+         3 { Disable-Windows-Updates $true }
+         4 { Show-All-File-Extensions $true }
+         5 { Disable-Gamebar-Popups $true }
+         6 { Restore-Classical-Context-Menu $true }
          7 { Disable-System-Sounds $true }
          8 { Fix-Taskbar-Settings $true }
          9 { Disable-Startup-Ads-For-M365 $true }
         10 { Disable-Power-Saving-Features $true }
         11 { Restart-Machine }
+
         default {
             Write-Host "Invalid choice, please try again." -ForegroundColor Red
             Pause
