@@ -67,14 +67,14 @@ function Restore-Classical-Start-Menu {
 
     Log-Action-Text "Restore classical start menu" "Yellow"
 
-    C:\ProgramData\chocolatey\bin\choco.exe install --force -y open-shell --params="'/StartMenu:true /ClassicExplorer:false /ClassicIE:false'"
+    C:\ProgramData\chocolatey\bin\choco.exe install --force -y open-shell --params="'/StartMenu'"
 
     if ($doPause) {
         Pause
     }
 }
 
-function Disable-Windows-Updates {
+function Disable-Windows-Updates { 
 
     param (
         [bool]$doPause
@@ -395,7 +395,7 @@ function Show-Menu {
     else {
         Write-Host "       Tiny 11 Tuner [USER MODE]      "
     }
-    
+
     Write-Host "======================================"
     Write-Host " 0. Execute all actions"
 

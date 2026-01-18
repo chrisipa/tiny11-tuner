@@ -1,5 +1,5 @@
 # tiny11-tuner
-Powerscript to make Windows (or Tiny) 11 much more usable.
+Powerscript to make Windows (or Tiny) 11 much more usable. The script has been tested with Windows 11 
 
 ## How to execute locally?
 
