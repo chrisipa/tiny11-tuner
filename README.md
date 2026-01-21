@@ -26,7 +26,7 @@ A PowerShell script that makes Windows 11 (or Tiny11) far more usable. Once appl
 
 ## How to execute?
 
-* The script can be executed with or without adminisitrative privileges
+* The script can be executed with or without administrative privileges
 * Please keep in mind that it will provide less functionalities if you execute it with a non admin user account
 
 ### How to execute locally?
